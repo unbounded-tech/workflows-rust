@@ -1,46 +1,59 @@
-# workflow-rust-release
 
-Reusable GitHub Actions workflows for Rust CLI release automation.
+# workflows-rust
+
+Reusable GitHub Actions workflows for Rust CLI quality checks and release automation.
 
 ## Overview
 
-This directory provides a set of workflows to automate the versioning, tagging, release, and optional registry publishing (crates.io, Homebrew, Scoop) for Rust CLI tools.
+This repository provides workflows to automate quality assurance and release processes for Rust CLI tools. It includes two callable workflows: `quality.yaml` for building and testing, and `release.yaml` for building and publishing cross-platform binaries. Additionally, it includes workflows for versioning, tagging, and creating GitHub Releases.
 
 ### Workflows Included
 
-- **on-push-main-version-and-tag.yaml**
-  _Trigger:_ Push to `main`
-  _Purpose:_ Determines the next version number based on commit logs and tags, and creates a new version tag for release. Uses the reusable workflow from `workflow-vnext-tag`.
-  _Typical Use:_ Automates semantic versioning and tagging for your project.
+- **quality.yaml**  
+  _Trigger:_ `workflow_call`  
+  _Purpose:_ Builds and tests a Rust project across a matrix of platforms, with customizable build and test arguments.  
+  _Typical Use:_ Ensures code quality before release by running builds and tests.
 
-- **on-v-tag-release.yaml**
-  _Trigger:_ Push of a tag matching `v*.*.*`
-  _Purpose:_ Creates a GitHub Release for the new version tag using the ncipollo/release-action.
-  _Typical Use:_ Ensures every version tag gets a corresponding GitHub Release.
+- **release.yaml**  
+  _Trigger:_ `workflow_call`  
+  _Purpose:_ Builds Rust binaries for a matrix of platforms and publishes them to a GitHub Release.  
+  _Typical Use:_ Automates cross-platform binary builds and release artifact publishing.
 
-- **workflow.yaml**
-  _Trigger:_ `workflow_call` (intended to be called from other repositories or workflows)
-  _Purpose:_ Builds Rust binaries for a matrix of platforms, uploads them to the GitHub Release, and optionally publishes to crates.io, Homebrew, and Scoop.
-  _Typical Use:_ The main reusable workflow for cross-platform Rust CLI release automation.
+## Usage: Quality Workflow
 
----
+The `quality.yaml` workflow builds and tests your Rust project. Example usage in your repository:
 
-## Typical Release Flow
+```yaml
+name: Quality Check
 
-1. **Push to main**
-   - `on-push-main-version-and-tag.yaml` runs, determines the next version, and creates a tag (e.g., `v1.2.3`).
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
-2. **Tag is pushed**
-   - `on-v-tag-release.yaml` runs, creating a GitHub Release for the new tag.
+jobs:
+  quality:
+    uses: harmony-labs/workflows-rust/.github/workflows/quality.yaml@main
+    with:
+      cargo_build_args: '--no-default-features --verbose'
+      cargo_test_args: '--no-default-features --verbose'
+      cargo_incremental: false
+      platforms: '[{"runs-on": "ubuntu-latest"}, {"runs-on": "macos-latest"}]'
+      verbose_logging: true
+```
 
-3. **Reusable workflow is called**
-   - `workflow.yaml` is called (manually or via another workflow) to build binaries, upload them to the release, and optionally publish to registries.
+### Inputs for `quality.yaml`
 
----
+- `cargo_build_args` (optional, default: `--no-default-features --verbose`): Additional arguments for `cargo build`.
+- `cargo_test_args` (optional, default: `--no-default-features --verbose`): Additional arguments for `cargo test`.
+- `cargo_incremental` (optional, default: `false`): Enable incremental compilation.
+- `platforms` (optional, default: `[{"runs-on": "ubuntu-latest"}]`): JSON array of platforms for the build matrix.
+- `verbose_logging` (optional, default: `false`): Enable verbose logging.
 
-## Usage: Reusable Release Workflow
+## Usage: Release Workflow
 
-In your Rust CLI repository, add a workflow like:
+The `release.yaml` workflow builds and publishes binaries. Example usage:
 
 ```yaml
 name: Release
@@ -52,43 +65,28 @@ on:
 
 jobs:
   release:
-    uses: harmony-labs/workflow-rust-release/.github/workflows/workflow.yaml@main
+    uses: harmony-labs/workflows-rust/.github/workflows/release.yaml@main
     with:
-      binary_name: gh-config
-      crate_name: gh-config-cli
-      homebrew_tap: harmony-labs/homebrew-tap
-      scoop_bucket: harmony-labs/scoop-bucket
-    secrets:
-      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-      HOMEBREW_GITHUB_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
-      SCOOP_GITHUB_TOKEN: ${{ secrets.SCOOP_GITHUB_TOKEN }}
+      binary_name: my-cli-tool
+      build_args: '--release --features vendored'
+      platforms: |
+        [
+          {"os-name": "Linux-x86_64", "runs-on": "ubuntu-24.04", "target": "x86_64-unknown-linux-musl"},
+          {"os-name": "Windows-x86_64", "runs-on": "windows-latest", "target": "x86_64-pc-windows-msvc"}
+        ]
 ```
 
-- Omit any input or secret to skip that registry/platform.
+### Inputs for `release.yaml`
 
-## Inputs
-
-- `binary_name` (required): Name of the built binary/executable.
-- `crate_name` (optional): Name of the crate for crates.io publishing.
-- `homebrew_tap` (optional): Homebrew tap repo (org/repo) for formula PR.
-- `scoop_bucket` (optional): Scoop bucket repo (org/repo) for manifest PR.
-- `platforms` (optional): JSON array of build targets (see workflow for default).
-
-## Secrets
-
-- `CARGO_REGISTRY_TOKEN` (optional): crates.io API token.
-- `HOMEBREW_GITHUB_TOKEN` (optional): GitHub token with write access to the Homebrew tap repo.
-- `SCOOP_GITHUB_TOKEN` (optional): GitHub token with write access to the Scoop bucket repo.
-
-## How Homebrew/Scoop Updates Work
-
-- The workflow uses the GitHub CLI (`gh`) to fork, clone, update, commit, and open a PR to the tap/bucket repo.
-- You must implement the logic to update the formula/manifest file in the repo (see TODOs in the workflow).
+- `binary_name` (required): Name of the binary/executable.
+- `build_args` (optional, default: `--release --features vendored`): Flags for `cargo build`.
+- `platforms` (optional, default includes multiple platforms): JSON array of platforms for the build matrix.
 
 ## Extending
 
-- Add logic to update the Homebrew formula and Scoop manifest as needed for your project.
-- You can customize the build matrix by overriding the `platforms` input.
+- Customize the `platforms` input to target specific operating systems or architectures.
+- Add logic in your repository to update Homebrew formulas or Scoop manifests if needed (not implemented in these workflows).
+- Modify build/test arguments to suit your project's needs.
 
 ## License
 
