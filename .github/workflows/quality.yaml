@@ -20,6 +20,15 @@ on:
         required: false
         type: boolean
         default: false
+
+      platforms:
+        description: "JSON array of platforms for the matrix"
+        required: false
+        type: string
+        default: |
+          [
+            {"runs-on": "ubuntu-latest"}
+          ]
       
       verbose_logging:
         description: 'Enable verbose logging'
@@ -29,7 +38,11 @@ on:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform.runs-on }}
+
+    strategy:
+      matrix:
+        platform: ${{ fromJson(inputs.platforms) }}
 
     steps:
       - name: Checkout Code
