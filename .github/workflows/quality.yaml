@@ -1,0 +1,67 @@
+name: Rust Quality Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      cargo_build_args:
+        description: 'Optional additional arguments for cargo build'
+        required: false
+        type: string
+        default: '--no-default-features --verbose'
+
+      cargo_test_args:
+        description: 'Optional additional arguments for cargo test'
+        required: false
+        type: string
+        default: '--no-default-features --verbose'
+      
+      cargo_incremental:
+        description: 'Enable incremental compilation'
+        required: false
+        type: boolean
+        default: false
+      
+      verbose_logging:
+        description: 'Enable verbose logging'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Set Environment Variables
+        run: |
+          # Set CARGO_INCREMENTAL
+          if [ "${{ inputs.cargo_incremental }}" = "true" ]; then
+            echo "CARGO_INCREMENTAL=1" >> $GITHUB_ENV
+          else
+            echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+          fi
+          # Set LOG_LEVEL
+          if [ "${{ inputs.verbose_logging }}" = "true" ]; then
+            echo "LOG_LEVEL=debug" >> $GITHUB_ENV
+          else
+            echo "LOG_LEVEL=info" >> $GITHUB_ENV
+          fi
+
+      - name: Build Project
+        run: cargo build ${{ inputs.cargo_build_args }}
+
+      - name: Run Tests
+        run: cargo test ${{ inputs.cargo_test_args }}

@@ -1,0 +1,18 @@
+name: On Tag, Trigger GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  call-release-workflow:
+    uses: harmony-labs/workflow-simple-release/.github/workflows/workflow.yaml@v0.1.0
+    with:
+      tag_name: ${{ github.ref_name }}
+      release_name: ${{ github.ref_name }}
+      draft: false
+      prerelease: false
