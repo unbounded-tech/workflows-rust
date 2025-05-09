@@ -92,6 +92,7 @@ jobs:
           # Set GITHUB_TOKEN
           if [ "${{ inputs.auth_gh }}" = "true" ]; then
             echo "GITHUB_TOKEN=${{ secrets.REPO_WRITE_PACKAGES_PAT }}" >> $GITHUB_ENV
+            echo "GITHUB_USERNAME=harmony-labs-bot" >> $GITHUB_ENV
           fi
 
       - name: Build Project
