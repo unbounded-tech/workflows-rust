@@ -96,7 +96,6 @@ jobs:
 
       - name: Build Project
         run: |
-          source $GITHUB_ENV
           cargo build ${{ inputs.cargo_build_args }}
 
       - name: Run Tests
