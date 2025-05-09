@@ -11,7 +11,7 @@ on:
         description: "Flags to pass to cargo build command"
         required: false
         type: string
-        default: "--release --features vendored"
+        default: "--release"
       platforms:
         description: "JSON array of platforms for the matrix"
         required: false
