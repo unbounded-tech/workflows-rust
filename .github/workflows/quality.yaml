@@ -92,7 +92,6 @@ jobs:
           # Set GITHUB_TOKEN
           if [ "${{ inputs.auth_gh }}" = "true" ]; then
             echo "GITHUB_TOKEN=${{ secrets.REPO_WRITE_PACKAGES_PAT }}" >> $GITHUB_ENV
-            git config --
           fi
 
       - name: Build Project
