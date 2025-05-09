@@ -21,6 +21,12 @@ on:
         type: boolean
         default: false
 
+      auth_gh:
+        description: 'Enable GitHub authentication'
+        required: false
+        type: boolean
+        default: false
+
       platforms:
         description: "JSON array of platforms for the matrix"
         required: false
@@ -35,6 +41,11 @@ on:
         required: false
         type: boolean
         default: false
+
+    secrets:
+      REPO_WRITE_PACKAGES_PAT:
+        description: 'GitHub token for authentication'
+        required: false
 
 jobs:
   quality:
@@ -71,6 +82,10 @@ jobs:
             echo "LOG_LEVEL=debug" >> $GITHUB_ENV
           else
             echo "LOG_LEVEL=info" >> $GITHUB_ENV
+          fi
+          # Set GITHUB_TOKEN
+          if [ "${{ inputs.auth_gh }}" = "true" ]; then
+            echo "GITHUB_TOKEN=${{ secrets.REPO_WRITE_PACKAGES_PAT }}" >> $GITHUB_ENV
           fi
 
       - name: Build Project
