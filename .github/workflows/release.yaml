@@ -12,36 +12,41 @@ on:
         required: false
         type: string
         default: "--release"
-      platforms:
+      runs-on:
         description: "JSON array of platforms for the matrix"
         required: false
         type: string
         default: |
           [
-            {"os-name": "FreeBSD-x86_64", "runs-on": "ubuntu-24.04", "target": "x86_64-unknown-freebsd"},
-            {"os-name": "macOS-x86_64", "runs-on": "macOS-latest", "target": "x86_64-apple-darwin"},
-            {"os-name": "macOS-aarch64", "runs-on": "macOS-latest", "target": "aarch64-apple-darwin"},
-            {"os-name": "Linux-x86_64", "runs-on": "ubuntu-24.04", "target": "x86_64-unknown-linux-musl"},
-            {"os-name": "Linux-arm", "runs-on": "ubuntu-24.04", "target": "arm-unknown-linux-musleabi"},
-            {"os-name": "Linux-i686", "runs-on": "ubuntu-24.04", "target": "i686-unknown-linux-musl"},
-            {"os-name": "Windows-i686", "runs-on": "windows-latest", "target": "i686-pc-windows-msvc"},
-            {"os-name": "Windows-aarch64", "runs-on": "windows-latest", "target": "aarch64-pc-windows-msvc"},
-            {"os-name": "Windows-x86_64", "runs-on": "windows-latest", "target": "x86_64-pc-windows-msvc"}
+            {"runs-on": "ubuntu-24.04", "target": "x86_64-unknown-freebsd"},
+            {"runs-on": "ubuntu-24.04", "target": "x86_64-unknown-linux-musl"},
+            {"runs-on": "ubuntu-24.04", "target": "arm-unknown-linux-musleabi"},
+            {"runs-on": "ubuntu-24.04", "target": "i686-unknown-linux-musl"},
+            {"runs-on": "macOS-latest", "target": "x86_64-apple-darwin"},
+            {"runs-on": "macOS-latest", "target": "aarch64-apple-darwin"},
+            {"runs-on": "windows-latest", "target": "i686-pc-windows-msvc"},
+            {"runs-on": "windows-latest", "target": "aarch64-pc-windows-msvc"},
+            {"runs-on": "windows-latest", "target": "x86_64-pc-windows-msvc"}
           ]
 
 permissions:
   contents: write
 
 jobs:
-  publish:
-    name: Build and Publish
-    runs-on: ${{ matrix.platform.runs-on }}
-
+  setup:
+    uses: harmony-labs/runs-on/.github/workflows/setup.yaml@v0.1.2
+    with:
+      runs-on: ${{ inputs.runs-on }}
+  release:
+    needs: setup
     strategy:
       matrix:
-        platform: ${{ fromJson(inputs.platforms) }}
+        include: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    runs-on: ${{ matrix.runs-on }}
 
     steps:
+      - uses: runs-on/action@v1
+
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
@@ -49,7 +54,7 @@ jobs:
         uses: houseabsolute/actions-rust-cross@v1
         with:
           command: build
-          target: ${{ matrix.platform.target }}
+          target: ${{ matrix.target }}
           args: ${{ inputs.build_args }}
           strip: true
 
@@ -57,5 +62,5 @@ jobs:
         uses: houseabsolute/actions-rust-release@v0
         with:
           executable-name: ${{ inputs.binary_name }}
-          target: ${{ matrix.platform.target }}
-          changes-file: ""
+          target: ${{ matrix.target }}
+          changes-file: CHANGELOG.md
