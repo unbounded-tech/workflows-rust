@@ -12,7 +12,5 @@ jobs:
   call-release-workflow:
     uses: harmony-labs/workflow-simple-release/.github/workflows/workflow.yaml@v1.0.0
     with:
-      tag_name: ${{ github.ref_name }}
-      release_name: ${{ github.ref_name }}
-      draft: false
-      prerelease: false
+      tag: ${{ github.ref_name }}
+      name: ${{ github.ref_name }}
