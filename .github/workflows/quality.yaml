@@ -21,14 +21,11 @@ on:
         type: boolean
         default: false
 
-      platforms:
-        description: "JSON array of platforms for the matrix"
-        required: false
+      runs-on:
+        description: 'Runner configuration: either a single string (e.g., "ubuntu-latest") or a JSON array'
         type: string
-        default: |
-          [
-            {"runs-on": "ubuntu-latest"}
-          ]
+        default: 'ubuntu-latest'
+        required: false
       
       verbose_logging:
         description: 'Enable verbose logging'
@@ -37,14 +34,21 @@ on:
         default: false
 
 jobs:
-  quality:
-    runs-on: ${{ matrix.platform.runs-on }}
 
+  setup:
+    uses: harmony-labs/runs-on/.github/workflows/setup.yaml@v0.1.2
+    with:
+      runs-on: ${{ inputs.runs-on }}
+  quality:
+    needs: setup
     strategy:
       matrix:
-        platform: ${{ fromJson(inputs.platforms) }}
+        include: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    runs-on: ${{ matrix.runs-on }}
 
     steps:
+      - uses: runs-on/action@v1
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
