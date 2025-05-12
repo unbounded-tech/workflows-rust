@@ -37,7 +37,7 @@ jobs:
     uses: harmony-labs/runs-on/.github/workflows/setup.yaml@v0.1.2
     with:
       runs-on: ${{ inputs.runs-on }}
-  quality:
+  release:
     needs: setup
     strategy:
       matrix:
