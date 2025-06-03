@@ -40,7 +40,7 @@ permissions:
 
 jobs:
   setup:
-    uses: unbounded-tech/runs-on/.github/workflows/setup.yaml@v0.2.0
+    uses: unbounded-tech/runs-on/.github/workflows/setup.yaml@v0.3.0
     with:
       runs-on: ${{ inputs.runs-on }}
       this-job-runs-on: ${{ inputs.setup-runs-on }}
@@ -53,7 +53,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
 
     steps:
-      - uses: runs-on/action@v1
+      - uses: runs-on/action@v1.0.0
 
       - name: Checkout
         uses: actions/checkout@v4.2.2
