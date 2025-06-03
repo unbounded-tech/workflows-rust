@@ -34,7 +34,7 @@ on:
 
 jobs:
   quality:
-    uses: harmony-labs/workflows-rust/.github/workflows/quality.yaml@main
+    uses: unbounded-tech/workflows-rust/.github/workflows/quality.yaml@main
     with:
       cargo_build_args: '--no-default-features --verbose'
       cargo_test_args: '--no-default-features --verbose'
@@ -65,7 +65,7 @@ on:
 
 jobs:
   release:
-    uses: harmony-labs/workflows-rust/.github/workflows/release.yaml@main
+    uses: unbounded-tech/workflows-rust/.github/workflows/release.yaml@main
     with:
       binary_name: my-cli-tool
       build_args: '--release --features vendored'

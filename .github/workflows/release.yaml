@@ -40,7 +40,7 @@ permissions:
 
 jobs:
   setup:
-    uses: harmony-labs/runs-on/.github/workflows/setup.yaml@v0.2.0
+    uses: unbounded-tech/runs-on/.github/workflows/setup.yaml@v0.2.0
     with:
       runs-on: ${{ inputs.runs-on }}
       this-job-runs-on: ${{ inputs.setup-runs-on }}
@@ -56,10 +56,10 @@ jobs:
       - uses: runs-on/action@v1
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@v4.2.2
 
       - name: Build binary
-        uses: houseabsolute/actions-rust-cross@v1
+        uses: houseabsolute/actions-rust-cross@v1.0.4
         with:
           command: build
           target: ${{ matrix.target }}
@@ -67,7 +67,7 @@ jobs:
           strip: true
 
       - name: Publish artifacts and release
-        uses: houseabsolute/actions-rust-release@v0
+        uses: houseabsolute/actions-rust-release@v0.0.6
         with:
           executable-name: ${{ inputs.binary_name }}
           target: ${{ matrix.target }}
