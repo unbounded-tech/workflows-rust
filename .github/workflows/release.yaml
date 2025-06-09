@@ -53,7 +53,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
 
     steps:
-      - uses: runs-on/action@v1.0.0
+      - uses: runs-on/action@v1.1.0
 
       - name: Checkout
         uses: actions/checkout@v4.2.2
