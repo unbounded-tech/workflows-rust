@@ -42,7 +42,7 @@ jobs:
       - uses: runs-on/action@v2.0.3
 
       - name: Checkout Code
-        uses: actions/checkout@v4.3.0
+        uses: actions/checkout@v5.0.0
 
       - uses: actions/cache@v4.2.4
         with:
