@@ -56,7 +56,7 @@ jobs:
       - uses: runs-on/action@v2.0.3
 
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4.3.0
 
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v1.0.5
