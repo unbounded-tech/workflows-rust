@@ -45,8 +45,36 @@ jobs:
       runs-on: ${{ inputs.runs-on }}
       this-job-runs-on: ${{ inputs.setup-runs-on }}
 
-  release:
+  create-draft-release:
     needs: setup
+    runs-on: ${{ inputs.setup-runs-on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Read Changelog
+        id: changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            CHANGELOG=$(cat CHANGELOG.md)
+            echo "changelog<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=No changelog found" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          body: ${{ steps.changelog.outputs.changelog }}
+          token: ${{ github.token }}
+
+  build-and-release:
+    needs: [setup, create-draft-release]
     strategy:
       matrix:
         include: ${{ fromJSON(needs.setup.outputs.matrix) }}
