@@ -1,23 +1,27 @@
-
 # workflows-rust
 
-Reusable GitHub Actions workflows for Rust CLI quality checks and release automation.
+Reusable GitHub Actions workflows for Rust quality checks, binary release automation, and Cargo crate publishing.
 
 ## Overview
 
-This repository provides workflows to automate quality assurance and release processes for Rust CLI tools. It includes two callable workflows: `quality.yaml` for building and testing, and `release.yaml` for building and publishing cross-platform binaries. Additionally, it includes workflows for versioning, tagging, and creating GitHub Releases.
+This repository provides reusable workflows to automate quality checks and release processes for Rust projects.
 
 ### Workflows Included
 
-- **quality.yaml**  
-  _Trigger:_ `workflow_call`  
-  _Purpose:_ Builds and tests a Rust project across a matrix of platforms, with customizable build and test arguments.  
+- **quality.yaml**
+  _Trigger:_ `workflow_call`
+  _Purpose:_ Builds and tests a Rust project with customizable build and test arguments.
   _Typical Use:_ Ensures code quality before release by running builds and tests.
 
-- **release.yaml**  
-  _Trigger:_ `workflow_call`  
-  _Purpose:_ Builds Rust binaries for a matrix of platforms and publishes them to a GitHub Release.  
-  _Typical Use:_ Automates cross-platform binary builds and release artifact publishing.
+- **release.yaml**
+  _Trigger:_ `workflow_call`
+  _Purpose:_ Builds Rust binaries for a matrix of platforms and publishes them as GitHub Release artifacts.
+  _Typical Use:_ Automates cross-platform binary builds and release artifact publishing for CLI tools.
+
+- **publish.yaml**
+  _Trigger:_ `workflow_call`
+  _Purpose:_ Publishes a Rust crate to crates.io using `cargo publish`.
+  _Typical Use:_ Automates publishing library crates when version tags are created.
 
 ## Usage: Quality Workflow
 
@@ -39,7 +43,7 @@ jobs:
       cargo_build_args: '--no-default-features --verbose'
       cargo_test_args: '--no-default-features --verbose'
       cargo_incremental: false
-      platforms: '[{"runs-on": "ubuntu-latest"}, {"runs-on": "macos-latest"}]'
+      runs-on: 'ubuntu-latest'
       verbose_logging: true
 ```
 
@@ -48,7 +52,7 @@ jobs:
 - `cargo_build_args` (optional, default: `--no-default-features --verbose`): Additional arguments for `cargo build`.
 - `cargo_test_args` (optional, default: `--no-default-features --verbose`): Additional arguments for `cargo test`.
 - `cargo_incremental` (optional, default: `false`): Enable incremental compilation.
-- `platforms` (optional, default: `[{"runs-on": "ubuntu-latest"}]`): JSON array of platforms for the build matrix.
+- `runs-on` (optional, default: `ubuntu-latest`): Runner label used for the job.
 - `verbose_logging` (optional, default: `false`): Enable verbose logging.
 
 ## Usage: Release Workflow
@@ -69,24 +73,58 @@ jobs:
     with:
       binary_name: my-cli-tool
       build_args: '--release --features vendored'
-      platforms: |
+      runs-on: |
         [
-          {"os-name": "Linux-x86_64", "runs-on": "ubuntu-24.04", "target": "x86_64-unknown-linux-musl"},
-          {"os-name": "Windows-x86_64", "runs-on": "windows-latest", "target": "x86_64-pc-windows-msvc"}
+          {"runs-on": "ubuntu-24.04", "target": "x86_64-unknown-linux-musl"},
+          {"runs-on": "windows-latest", "target": "x86_64-pc-windows-msvc"}
         ]
 ```
 
 ### Inputs for `release.yaml`
 
 - `binary_name` (required): Name of the binary/executable.
-- `build_args` (optional, default: `--release --features vendored`): Flags for `cargo build`.
-- `platforms` (optional, default includes multiple platforms): JSON array of platforms for the build matrix.
+- `build_args` (optional, default: `--release`): Flags for `cargo build`.
+- `runs-on` (optional, default includes multiple platforms): JSON array of runner/target entries.
+- `setup-runs-on` (optional, default: `ubuntu-latest`): Runner used by the setup and draft-release jobs.
+
+## Usage: Publish Workflow
+
+The `publish.yaml` workflow publishes a crate to crates.io. Example usage:
+
+```yaml
+name: Publish Crate
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    uses: unbounded-tech/workflows-rust/.github/workflows/publish.yaml@main
+    secrets:
+      crates_io_token: ${{ secrets.CRATES_IO_TOKEN }}
+    with:
+      manifest_path: Cargo.toml
+      cargo_publish_args: '--locked'
+```
+
+### Inputs for `publish.yaml`
+
+- `manifest_path` (optional, default: `Cargo.toml`): Path to the crate manifest to publish.
+- `cargo_publish_args` (optional, default: `--locked`): Additional arguments for `cargo publish`.
+- `dry_run` (optional, default: `false`): If `true`, runs `cargo publish --dry-run`.
+- `runs-on` (optional, default: `ubuntu-latest`): Runner label used for the job.
+
+### Secrets for `publish.yaml`
+
+- `crates_io_token` (required): crates.io API token.
 
 ## Extending
 
-- Customize the `platforms` input to target specific operating systems or architectures.
-- Add logic in your repository to update Homebrew formulas or Scoop manifests if needed (not implemented in these workflows).
-- Modify build/test arguments to suit your project's needs.
+- Customize release matrix targets via `release.yaml` `runs-on` input.
+- Adjust cargo arguments to suit workspace layouts or feature flags.
+- Chain `publish.yaml` after your version-tag workflow to publish only tagged releases.
 
 ## License
 
