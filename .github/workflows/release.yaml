@@ -95,7 +95,7 @@ jobs:
           strip: true
 
       - name: Publish artifacts and release
-        uses: houseabsolute/actions-rust-release@v0.0.7
+        uses: houseabsolute/actions-rust-release@v0.0.9
         with:
           executable-name: ${{ inputs.binary_name }}
           target: ${{ matrix.target }}
